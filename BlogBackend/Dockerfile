@@ -1,25 +1,24 @@
 ########################################
-# 1) Build your app
+# 1) Build your app using .NET 8 SDK
 ########################################
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# 1a) Copy only the csproj into the container, from the sub‑folder
+# Copy the project file from the sub‑folder and restore
 COPY BlogBackend/BlogBackend.csproj ./BlogBackend.csproj
-
-# 1b) Restore that project
 RUN dotnet restore ./BlogBackend.csproj
 
-# 2) Copy the rest of the files and publish
+# Copy everything else, then publish
 COPY . .
 WORKDIR /src/BlogBackend
 RUN dotnet publish -c Release -o /app/publish
 
 ########################################
-# 3) Run your app
+# 2) Run your app on .NET 8 ASP.NET runtime
 ########################################
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 80
+
 ENTRYPOINT ["dotnet", "BlogBackend.dll"]
