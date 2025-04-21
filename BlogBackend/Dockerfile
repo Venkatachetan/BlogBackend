@@ -1,24 +1,25 @@
-# Use the official .NET SDK image to build the app
+########################################
+# 1) Build your app
+########################################
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore as distinct layers
-COPY *.csproj ./
-RUN dotnet restore
+# 1a) Copy only the csproj into the container, from the sub‑folder
+COPY BlogBackend/BlogBackend.csproj ./BlogBackend.csproj
 
-# Copy the rest of the application and build
-COPY . ./
+# 1b) Restore that project
+RUN dotnet restore ./BlogBackend.csproj
+
+# 2) Copy the rest of the files and publish
+COPY . .
+WORKDIR /src/BlogBackend
 RUN dotnet publish -c Release -o /app/publish
 
-# Final runtime image
+########################################
+# 3) Run your app
+########################################
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
 WORKDIR /app
-
-# Copy the published output to the runtime image
 COPY --from=build /app/publish .
-
-# Expose the port (adjust if your app listens on a different port)
 EXPOSE 80
-
-# Start the application
 ENTRYPOINT ["dotnet", "BlogBackend.dll"]
